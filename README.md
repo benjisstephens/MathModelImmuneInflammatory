@@ -8,6 +8,8 @@ Then we produce a hybrid model (stochastic cell movement, continuous chemokine c
 We conclude by fitting the data to the model by parameter estimation.
 
 ## Code Structure
+Data supplied by Imperial College London's Bioengineering department is given in 'dataset'. 
+Ensure all files are in the same folder as the remaining code when running.
 ### Code to display cell trajectory data:
 - 'cell_trajectory_data.py'
 - 'kde.py'
@@ -22,6 +24,7 @@ We conclude by fitting the data to the model by parameter estimation.
 ### Code for hybrid model
 - 'hybrid_model.py'
 - 'hybrid_model_fitting.py'
+
 
 ## Dependencies
 This project requires the following Python libraries:
