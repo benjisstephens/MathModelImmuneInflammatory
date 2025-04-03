@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 
-chemokine_present = False
+chemokine_present = True
 flow_direction = 'NEG'
 steady_state = False
 
@@ -29,7 +29,7 @@ dt = t_1/100
 Dt =    int((t_1 - t_0 + dt) / dt)                  # Dt: Number of time steps.
 t =     np.linspace(t_0, t_1, Dt)                   # t : Time mesh.
 
-plt.rcParams["font.size"] = 14
+plt.rcParams["font.size"] = 18
 
 #%% Read data
 c_matrix = np.loadtxt("c_matrix.txt", delimiter=",")
@@ -49,7 +49,7 @@ flux_phi_combined_matrix = np.loadtxt("flux_phi_combined_matrix.txt",
 
 #%% Plot just results
 for i, t_i in enumerate(t):
-    if i % 10 == 0:
+    if i % 300 == 0:
         # Plot concentrations
         fig, ax = plt.subplots(figsize=(4, 4), dpi=300)
         
@@ -77,9 +77,8 @@ for i, t_i in enumerate(t):
         plt.tight_layout()
 
         # Optionally save the figure
-        if toggle_save:
-            plt.savefig(f"5variable_density_t{t_i}.png", dpi=300, 
-                        bbox_inches='tight')
+        plt.savefig(f"5variable_density_t{t_i}.png", dpi=300, 
+                    bbox_inches='tight')
 
         plt.show()
 
@@ -87,7 +86,7 @@ for i, t_i in enumerate(t):
 # %%# Plot results for density and flux
 
 for i, t_i in enumerate(t):
-    if i % 10 == 0:
+    if i % 300 == 0:
         # Create figure and subplots for concentrations and fluxes
         fig, axs = plt.subplots(1, 2, figsize=(7.5, 4), dpi=300)
 
@@ -104,7 +103,7 @@ for i, t_i in enumerate(t):
         axs[0].set_xlim(x_0, x_1)
         axs[0].set_ylim(0, 1)
         axs[0].grid()
-        axs[0].set_title("Densities",fontsize=14)
+        axs[0].set_title("Densities")
 
         # Plot fluxes
         # axs[1].plot(x, flux_c_matrix[i, :], color='darkmagenta')
@@ -119,7 +118,7 @@ for i, t_i in enumerate(t):
         axs[1].set_ylim(-0.1, 0.1)
         axs[1].axhline(y=0, color='black')
         axs[1].grid()
-        axs[1].set_title("Fluxes",fontsize=14)
+        axs[1].set_title("Fluxes")
 
         # Combine legends into one, positioned above the plots
         handles, labels = axs[0].get_legend_handles_labels()
@@ -133,9 +132,8 @@ for i, t_i in enumerate(t):
         plt.tight_layout()
 
         # Optionally save the figure
-        if toggle_save:
-            plt.savefig(f"5variable_t{t_i:.1f}s.png", dpi=300, 
-                        bbox_inches='tight')
+        plt.savefig(f"5variable_t{t_i:.1f}s.png", dpi=300, 
+                    bbox_inches='tight')
 
         plt.show()
 
@@ -161,11 +159,11 @@ for density_matrix, label, file_name in zip(density_matrices,
     elif file_name == 'phi_c_matrix':
         vmin, vmax = 0, 0.6
     elif file_name == 'c_t_matrix':
-        vmin, vmax = 0, 1#6e-2
+        vmin, vmax = 0, 0.6
     elif file_name == 'phi_c_t_matrix':
         vmin, vmax = 0, 6e-3
     else:
-        vmin, vmax = 0, 0.4
+        vmin, vmax = 0, 1
     
     fig, (cbar_ax, ax) = plt.subplots(nrows=2, figsize=(6, 7),
                         gridspec_kw={"height_ratios": [1, 20]}, dpi=300)
@@ -200,11 +198,10 @@ for density_matrix, label, file_name in zip(density_matrices,
     # Create and configure the colorbar
     cbar = fig.colorbar(im, cax=cbar_ax, orientation='horizontal',
                         location='top')
-    cbar.ax.tick_params(labelsize=14)
     if file_name == 'c_matrix' or file_name == 'c_t_matrix':
-        cbar.set_label('Density $(CCL21/\mu m)$', fontsize=14)
+        cbar.set_label('Density $(CCL21/\mu m)$', fontsize=22)
     else:
-        cbar.set_label('Density $(cells/\mu m)$', fontsize=14)
+        cbar.set_label('Density $(cells/\mu m)$', fontsize=22)
     cbar.set_ticks(np.linspace(vmin, vmax, 5))
     formatter = mticker.ScalarFormatter(useMathText=False)
     formatter.set_scientific(True)
@@ -231,7 +228,7 @@ file_names = ['flux_c_matrix', 'flux_phi_matrix', 'flux_phi_c_matrix',
 for flux_matrix, label, file_name in zip(flux_matrices, labels, file_names):
     
     if file_name == 'flux_c_matrix':
-        vlim = 1e6
+        vlim = 1e5
     elif file_name == 'flux_phi_matrix':
         vlim = 1e-4
     elif file_name == 'flux_phi_c_matrix':
@@ -241,7 +238,7 @@ for flux_matrix, label, file_name in zip(flux_matrices, labels, file_names):
     elif file_name == 'flux_phi_c_t_matrix':
         vlim = 1e-6
     else:
-        vlim = 2e-5
+        vlim = 1e-4
 
     vmin, vmax = -vlim, vlim
     
@@ -279,11 +276,10 @@ for flux_matrix, label, file_name in zip(flux_matrices, labels, file_names):
     # Create and configure the colorbar
     cbar = fig.colorbar(im, cax=cbar_ax, orientation='horizontal',
                         location='top')
-    cbar.ax.tick_params(labelsize=14)
     if file_name == 'flux_c_matrix' or file_name == 'flux_c_t_matrix':
-        cbar.set_label('Flux ($CCL21/s$)', fontsize=14)
+        cbar.set_label('Flux ($CCL21/s$)', fontsize=22)
     else:
-        cbar.set_label('Flux ($cells/s$)', fontsize=14)
+        cbar.set_label('Flux ($cells/s$)', fontsize=22)
     cbar.set_ticks(np.linspace(vmin, vmax, 3))
     formatter = mticker.ScalarFormatter(useMathText=False)
     formatter.set_scientific(True)

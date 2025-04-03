@@ -15,7 +15,7 @@ from scipy.interpolate import interp1d
 toggle_save = True
 
 chemokine_present = True
-flow_direction = 'POS'
+flow_direction = 'NEG'
 steady_state = False
 
 # Define spatial step and domain.
@@ -28,7 +28,7 @@ x = np.linspace(x_0, x_1, Dx)        # x : Spatial mesh.
 
 # Define parameter values.
 D_c_t =     10                       
-D_phi =     0.01                    
+D_phi =     0.01                   
 D_phi_c =   D_phi                     
 D_phi_c_t = D_phi                     
 N_R7 =      30000                    
@@ -39,20 +39,20 @@ beta_p =    1.5e-4
 beta_m =    72                     
 chi =       4e-3                    
 chi_t =     chi                    
-gamma =     1e6#2.8                      
+gamma =     4e-3 #2.8                      
 
 # %% Get initial conditions from data
 
 # File to be processed
 if chemokine_present == False:
    data_file = "M4_wDC_CTRL_POS_pos_export.txt" 
-   Pe = -2
+   Pe = 2
    proportion_bound = 0
    cell_count = 78
 else:
     if flow_direction == 'NEG':
         data_file = "M12_wDC_CCL21_NEG_pos_export.txt"
-        Pe = 2
+        Pe = -2
         proportion_bound = 0.2
         cell_count = 573
     elif flow_direction == 'DIF':
@@ -62,7 +62,7 @@ else:
         cell_count = 143
     elif flow_direction == 'POS':
         data_file = "M12_wDC_CCL21_POS_pos_export.txt"
-        Pe = -2
+        Pe = 2
         proportion_bound = 0.36
         cell_count = 250
 
