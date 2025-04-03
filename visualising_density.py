@@ -98,7 +98,8 @@ for data_file in data_files:
     title = data_file.replace('_pos_export.txt', '')
     np.savetxt(f"{title}_density_data.txt", density, delimiter=",")
 
-    fig, (cbar_ax, ax) = plt.subplots(nrows=2, figsize=(6, 7), gridspec_kw={"height_ratios": [1, 20]}, dpi=300
+    fig, (cbar_ax, ax) = plt.subplots(nrows=2, 
+            figsize=(6, 7), gridspec_kw={"height_ratios": [1, 20]}, dpi=300
     )
     cmap = plt.get_cmap('magma')
     vmin, vmax = 0, 1
