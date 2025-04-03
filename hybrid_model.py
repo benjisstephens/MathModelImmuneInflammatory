@@ -15,23 +15,23 @@ import pandas as pd
 import matplotlib.ticker as mticker
 from scipy.signal.windows import gaussian
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 18})
 
 # Select which case to examine
 chemokine_present = True
 flow_direction = 'NEG'
 
-threeDPlot = False  # True: display both 2D and 3D views in animation;
+threeDPlot = True  # True: display both 2D and 3D views in animation;
                     # False: display only 2D in animation. 
                    
 # Initalise constants based on experimental condition
 if chemokine_present == False: 
     data_file = "M4_wDC_CTRL_POS_pos_export.txt" 
-    U = -2 * 8.4e-2                 # um s^-1     
+    U = 2 * 8.4e-2                 # um s^-1     
     proportion_phi_c = 0
 else:
     if flow_direction == 'NEG':
-        U = 2 * 8.4e-2               # um s^-1 
+        U = -2 * 8.4e-2               # um s^-1 
         data_file = "M12_wDC_CCL21_NEG_pos_export.txt"
         proportion_phi_c = 0.2
     elif flow_direction == 'DIF':
@@ -54,14 +54,14 @@ total_simulation_time = 1800
 frames_per_second = 18
 
 # Stochastic difference equation parameters
-D = 0.41            # Diffusion parameter in um^2 s^-1
-chi = 10            # Chemotactic parameter in um^2 s^-1 cells^-1 um^3
+D = 0.41      # Diffusion parameter in um^2 s^-1
+chi =  0.0664            # Chemotactic parameter in um^2 s^-1 cells^-1 um^3
 k_N7_p = 1.83e-3    # Rate phi -> phi_c in s^-1 cells^-1 um^3
 k_N7_m = 5e-3       # Rate phi_c -> phi in s^-1
 
 # Function which alters the chemokine concentration after binding/unbinding
 def change_chemokine_gradient(x, y, x0, y0):
-    return 0.048 * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * 100**2))
+    return 0.01 * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * 100**2))
 
 # Class which defines a cell
 class Cell:
@@ -121,7 +121,7 @@ class Cell:
             - self.radius:
             self.r = proposed_r 
         else:
-            self.r = proposed_r 
+            self.r = self.r 
 
     # Define function for binding/unbinding events
     def update_type(self, binding_rate, unbinding_rate, concentration):
@@ -308,7 +308,7 @@ class Simulation:
         cbar = fig.colorbar(im, cax=cbar_ax, orientation='horizontal',
                             location='top')
         cbar.ax.tick_params(labelsize=14)
-        cbar.set_label('Density ($cells/\mu m$)', fontsize=14)
+        cbar.set_label('Density ($cells/\mu m$)', fontsize=22)
         cbar.set_ticks(np.linspace(vmin, vmax, 5))
         formatter = mticker.ScalarFormatter(useMathText=False)
         formatter.set_powerlimits((0, 0))  
@@ -343,8 +343,7 @@ class Simulation:
         # Create and configure colorbar
         cbar = fig.colorbar(flux_plot, cax=cbar_ax, orientation='horizontal',
                             location='top')
-        cbar.ax.tick_params(labelsize=14)
-        cbar.set_label('Flux', fontsize=14)
+        cbar.set_label('Flux $(cells/s)$', fontsize=22)
         cbar.set_ticks(np.linspace(vmin_raw, vmax_raw, 5))
     
         # Format colorbar tick labels
@@ -393,8 +392,7 @@ class Simulation:
             # Create and configure colorbar
             cbar = fig.colorbar(flux_plot_smoothed, cax=cbar_ax, 
                                 orientation='horizontal', location='top')
-            cbar.ax.tick_params(labelsize=14)
-            cbar.set_label('Flux (Smoothed)', fontsize=14)
+            cbar.set_label('Flux $(cells/s)$', fontsize=22)
             cbar.set_ticks(np.linspace(vmin_smooth, vmax_smooth, 5))
     
             # Format colorbar tick labels

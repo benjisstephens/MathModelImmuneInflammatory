@@ -9,10 +9,7 @@ import pandas as pd
 from scipy.signal.windows import gaussian
 from scipy.stats import truncnorm
 import random
-import seaborn as sns  # Import seaborn for KDE plots
-
-
-
+import seaborn as sns 
 
 def RunHybridModel(D, chi):
 
@@ -22,15 +19,15 @@ def RunHybridModel(D, chi):
                         # False: display only 2D;
 
     chemokine_present = True
-    flow_direction = 'POS'
+    flow_direction = 'NEG'
 
     if chemokine_present == False:
         data_file = "M4_wDC_CTRL_POS_pos_export.txt"
-        U = -2 * 8.4e-2          # um s^-1
+        U = 2 * 8.4e-2          # um s^-1
         proportion_phi_c = 0
     else:
         if flow_direction == 'NEG':
-            U = 2 * 8.4e-2  # um s^-1
+            U = -2 * 8.4e-2  # um s^-1
             data_file = "M12_wDC_CCL21_NEG_pos_export.txt"
             proportion_phi_c = 0.2
         elif flow_direction == 'DIF':
@@ -60,7 +57,7 @@ def RunHybridModel(D, chi):
     #   binding/unbinding occurs
     def change_chemokine_gradient(x, y, x0, y0):
         # return 1e-3 * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * 100**2))
-        return 0.48 * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * 100**2))
+        return 0.01 * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * 100**2))
 
     # %% Class which defines a cell
     class Cell:
@@ -280,16 +277,10 @@ def RunHybridModel(D, chi):
             kernel_sum = np.sum(gaussian_kernel)
             flux_matrix_smoothed_normalized = flux_matrix_smoothed / kernel_sum
 
-
             return flux_matrix_smoothed_normalized
-
-        # Function to animate the simulation.
-        # If threeDPlot is True, a figure with two subplots (2D and 3D) is created.
-        # If threeDPlot is False, only the 2D animation (ax1) is displayed.
 
         def do_animation(self, total_time, num_frames, save=True):
             if threeDPlot:
-                # Create a figure with two subplots: one for the 2D view and one for the 3D surface view.
                 fig = plt.figure(figsize=(16, 8))
                 gs = fig.add_gridspec(1, 2)
 
@@ -335,8 +326,9 @@ def RunHybridModel(D, chi):
                     np.arange(lower_boundary, upper_boundary + 1, 200))
 
             # Plot the initial 2D concentration as an image (heatmap)
-            concentration_plot = ax1.imshow(self.c, extent=[left_boundary, right_boundary, lower_boundary, upper_boundary],
-                                            origin='lower', cmap='RdPu', alpha=0.5)
+            concentration_plot = ax1.imshow(self.c, extent=[left_boundary, 
+                            right_boundary, lower_boundary, upper_boundary],
+                                    origin='lower', cmap='RdPu', alpha=0.5)
 
             # Draw the cells on the 2D axis
             self.circles = [cell.draw(ax1) for cell in self.cells]
@@ -412,7 +404,9 @@ def RunHybridModel(D, chi):
     # Create and run the simulation
     sim = Simulation()
     densityMatrix, fluxMatrix = sim.do_animation(
-        total_time=total_simulation_time, num_frames=total_simulation_time/frames_per_second, save=True)
+        total_time=total_simulation_time, 
+        num_frames=total_simulation_time/frames_per_second,
+        save=True)
 
     return densityMatrix, fluxMatrix
 
@@ -423,7 +417,7 @@ def load_data(filename):
     return np.loadtxt(filename, delimiter=",")
 
 # Function to compute the log-likelihood
-def log_likelihood(F, y, sigma=0.4):
+def log_likelihood(F, y, sigma=100):
     diff = F - y[:, :-1]
     return (-1/2*sigma**2)*np.sum(diff** 2) - (np.prod(y.shape)/2)*np.log(2*np.pi*sigma**2)
 
@@ -450,10 +444,12 @@ def metropolis_hastings(data_filename, num_samples, step_size):
     theta = np.array([D, chi])
 
     # Run model with initial parameters
-    densityMatrix_current, _ = RunHybridModel(theta[0], theta[1])
-    log_like_current = log_likelihood(densityMatrix_current, y)
+    densityMatrix_current, fluxMatrix_current = RunHybridModel(theta[0], theta[1])
+    #log_like_current = log_likelihood(densityMatrix_current, y)
+    log_like_current = log_likelihood(fluxMatrix_current, y)
     log_prior_current = log_prior(theta[0], theta[1])
-    log_posterior_current = log_like_current + log_prior_current
+    log_posterior_current = log_like_current# + log_prior_current
+    
     
     # Store only accepted samples
     accepted_samples = [theta]
@@ -473,12 +469,14 @@ def metropolis_hastings(data_filename, num_samples, step_size):
 
         # Run model with proposed parameters
         print("Running simulation for proposed parameters...")
-        densityMatrix_star, _ = RunHybridModel(D_star, chi_star)
+        densityMatrix_star, fluxMatrix_star = RunHybridModel(D_star, chi_star)
+        
         
         # Compute log-likelihood and log-prior for the proposed state
-        log_like_star = log_likelihood(densityMatrix_star, y)
+        #log_like_star = log_likelihood(densityMatrix_star, y)
+        log_like_star = log_likelihood(fluxMatrix_star, y)
         log_prior_star = log_prior(D_star, chi_star)
-        log_posterior_star = log_like_star + log_prior_star
+        log_posterior_star = log_like_star# + log_prior_star
 
         # Compute acceptance probability (in log-space)
         log_r = log_posterior_star - log_posterior_current
@@ -494,6 +492,7 @@ def metropolis_hastings(data_filename, num_samples, step_size):
             log_posterior_current = log_posterior_star
             log_like_current = log_like_star
             densityMatrix_current = densityMatrix_star
+            fluxMatrix_current = fluxMatrix_star
             print("Proposal accepted.")
         else:
             print("Proposal rejected.")
@@ -504,18 +503,20 @@ def metropolis_hastings(data_filename, num_samples, step_size):
         
         # Plot only accepted samples
         if accepted_samples:
-            accepted_samples_np = np.array(accepted_samples)  # Convert to array for plotting
+            accepted_samples_np = np.array(accepted_samples)  
             plt.figure(figsize=(6, 4))
 
             # Plot D
             plt.subplot(2, 1, 1)
-            plt.plot(range(len(accepted_samples_np)), accepted_samples_np[:, 0], linestyle='-', color='darkred')
+            plt.plot(range(len(accepted_samples_np)), accepted_samples_np[:, 0],
+                     linestyle='-', color='darkred')
             plt.ylabel(r'$D^{*}$')
             plt.grid()
             
             # Plot chi
             plt.subplot(2, 1, 2)
-            plt.plot(range(len(accepted_samples_np)), accepted_samples_np[:, 1], linestyle='-', color='darkred')
+            plt.plot(range(len(accepted_samples_np)), accepted_samples_np[:, 1],
+                     linestyle='-', color='darkred')
             plt.xlabel('Iteration')
             plt.ylabel(r'$\chi^{*}$')
             plt.grid()
@@ -526,7 +527,9 @@ def metropolis_hastings(data_filename, num_samples, step_size):
     return np.array(accepted_samples)
 
 # Example function call
-parameters = metropolis_hastings("M12_wDC_CCL21_POS_density_data.txt", 1000, (2, 2))
+parameters = metropolis_hastings("M12_wDC_CCL21_NEG_flux_data.txt", 5000, (3, 6))
+
+#parameters = np.loadtxt("parameter_list.txt", delimiter=",")
 
 plt.figure(figsize=(6, 4))
 
@@ -563,22 +566,34 @@ chi_prior_samples = np.array(chi_prior_samples)
 # Plot KDEs
 plt.figure(figsize=(6, 5))
 
+kde_D = gaussian_kde(parameters[:, 0], bw_method='scott')
+D_values = np.linspace(0, 100, 1000)
+D_density = kde_D(D_values)
+D_modal_value = D_values[np.argmax(D_density)]  # Find the x-value at the peak
+
+# KDE for chi (parameters[:, 1])
+kde_chi = gaussian_kde(parameters[:, 1], bw_method='scott')
+chi_values = np.linspace(0, 50, 1000)
+chi_density = kde_chi(chi_values)
+chi_modal_value = chi_values[np.argmax(chi_density)]  # Find the x-value at the peak
+
+print(D_modal_value)
+print(chi_modal_value)
+
 # KDE for D
 plt.subplot(2, 1, 1)
 sns.kdeplot(parameters[:, 0], color='darkred', fill=True, label='Posterior')
-sns.kdeplot(D_prior_samples, color='darkred', linestyle='dashed', label='Prior')
+#sns.kdeplot(D_prior_samples, color='darkred', linestyle='dashed', label='Prior')
 plt.xlabel(r'$D^{*}$')
-plt.xlim(0,5)
-plt.legend()
+plt.xlim(0,20)
 plt.grid()
 
 # KDE for chi
 plt.subplot(2, 1, 2)
 sns.kdeplot(parameters[:, 1], color='darkred', fill=True, label='Posterior')
-sns.kdeplot(chi_prior_samples, color='darkred', linestyle='dashed', label='Prior')
+#sns.kdeplot(chi_prior_samples, color='darkred', linestyle='dashed', label='Prior')
 plt.xlabel(r'$\chi^{*}$')
-plt.xlim(0,12)
-plt.legend()
+plt.xlim(0,20)
 plt.grid()
 
 plt.tight_layout()
