@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 21 15:29:29 2024
-
-@author: Benjamin Stephens
-"""
+# Solve the three-variable PDE
 
 import numpy as np
 from scipy.integrate import solve_ivp 
@@ -12,8 +7,8 @@ from scipy.stats import gaussian_kde
 from scipy.interpolate import interp1d
 
 chemokine_present = True
-flow_direction = 'POS'
-steady_state = False
+flow_direction = 'NEG'
+steady_state = True
 
 # Define spatial step and domain.
 x_0 =   0                             # x_0 : Left boundary x
@@ -23,14 +18,14 @@ Dx =    int((x_1 - x_0 + dx) / dx)    # Dx: Number of spatial steps.
 x =     np.linspace(x_0, x_1, Dx)     # x : Spatial mesh.
 
 # Define parameter values.
-D_phi =     6e-4            
+D_phi =     0.01            
 D_phi_c =   D_phi                
 N_R7 =      30000                   
 r =         9.8e-7                  
 d_c =       1.9e-2                    
 beta_p =    1.5e-4                    
 beta_m =    72                        
-chi =       3e-3                     
+chi =       4e-3                    
 
 
 #%% Get initial conditions from data
@@ -38,13 +33,13 @@ chi =       3e-3
 # File to be processed
 if chemokine_present == False:
    data_file = "M4_wDC_CTRL_POS_pos_export.txt" 
-   Pe = -2
+   Pe = 2
    proportion_bound = 0
    cell_count = 78
 else:
     if flow_direction == 'NEG':
         data_file = "M12_wDC_CCL21_NEG_pos_export.txt"
-        Pe = 2
+        Pe = -2
         proportion_bound = 0.2
         cell_count = 573
     elif flow_direction == 'DIF':
@@ -54,7 +49,7 @@ else:
         cell_count = 143
     elif flow_direction == 'POS':
         data_file = "M12_wDC_CCL21_POS_pos_export.txt"
-        Pe = -2
+        Pe = 2
         proportion_bound = 0.36
         cell_count = 250
 
@@ -109,14 +104,14 @@ else:
 phi_0 = phi0(x)
 phi_c_0 = phic0(x)
 
-t_0 =   0                                           # t_0 : Initial time
+t_0 =   0                                            # t_0 : Initial time
 if steady_state == True:                               
-    t_1 = 20                                        # t_1 : Final time                                    
+    t_1 = 150                                        # t_1 : Final time                                    
 else:                                                       
-    t_1 = 1800/(1.44e4)                            # dt: Time step.
-dt = t_1/100 
-Dt =    int((t_1 - t_0 + dt) / dt)                  # Dt: Number of time steps.
-t =     np.linspace(t_0, t_1, Dt)                   # t : Time mesh.
+    t_1 = 1800/(1.44e4)                              # dt: Time step.
+dt = t_1/2000 
+Dt =    int((t_1 - t_0 + dt) / dt)                   # Dt: Number of time steps.
+t =     np.linspace(t_0, t_1, Dt)                    # t : Time mesh.
 
 # Define PDE as a System of ODEs
 def pde(t, y):
@@ -198,7 +193,7 @@ solution = solve_ivp(pde, [t_0, t_1],initial_conditions,t_eval=t,method='RK45')
 
 
 # Store data as matricies
-c_matrix = np.zeros((Dt, Dx))  # Rows for time (Dt), columns for space (Dx)
+c_matrix = np.zeros((Dt, Dx))
 phi_matrix = np.zeros((Dt, Dx))
 phi_c_matrix = np.zeros((Dt, Dx))
 phi_combined_matrix = np.zeros((Dt, Dx))
@@ -213,9 +208,9 @@ flux_phi_combined_matrix = np.zeros((Dt, Dx))
 #%% 
 
 for i, t_i in enumerate(t):
-    c = solution.y[:Dx, i]  # Extract concentration (c) at time t_i
-    phi = solution.y[Dx:2*Dx, i]  # Extract phi at time t_i
-    phi_c = solution.y[2*Dx:, i]  # Extract phi_c at time t_i
+    c = solution.y[:Dx, i]  
+    phi = solution.y[Dx:2*Dx, i]
+    phi_c = solution.y[2*Dx:, i]  
     
     # Assign to matrices with time (t_i) as rows and space (x) as columns
     c_matrix[i, :] = c
@@ -246,7 +241,6 @@ np.savetxt("flux_phi_matrix.txt", flux_phi_matrix, delimiter=",")
 np.savetxt("flux_phi_c_matrix.txt", flux_phi_c_matrix, delimiter=",")
 np.savetxt("flux_phi_combined_matrix.txt", 
            flux_phi_combined_matrix, delimiter=",")
-
 
 
 
